@@ -9,6 +9,9 @@ var BufferHelper = require('bufferhelper'),
     Url = require('url'),
     Q = require('q');
 
+if (process.env.NODE_ENV !== 'production') {
+ //   require('longjohn');
+}
 
 var ComicCrawler = (function() {
 
