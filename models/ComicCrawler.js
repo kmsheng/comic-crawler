@@ -64,8 +64,12 @@ var ComicCrawler = (function() {
             res.on('end', function() {
 
                 var html = Iconv.decode(bufferhelper.toBuffer(), encoding);
-                    deferred.resolve(html);
+                deferred.resolve(html);
+
             });
+        }).on('error', function(e) {
+            console.log('Error: -> ', options, e.message, e.stack);
+            deferred.resolve('');
         });
 
         return deferred.promise;
@@ -90,6 +94,8 @@ var ComicCrawler = (function() {
                     }
                 });
                 deferred.resolve(links);
+            }, function(reason) {
+                deferred.reject(reason);
             });
 
         return deferred.promise;
@@ -114,6 +120,7 @@ var ComicCrawler = (function() {
 
             self.getImageUrlsByChapterLink(chapterLink)
                 .then(function(imageUrls) {
+                    console.log('getting links: ' + chapterLinks.length + ' rest');
                     chapterImageUrls.push(imageUrls);
                 }, function(reason) {
                     console.log('ComicCrawler.prototype.getImageUrlsOneByOne failed', reason);
@@ -146,10 +153,15 @@ var ComicCrawler = (function() {
                 console.log('content-type:', res.headers['content-type']);
                 console.log('content-length:', res.headers['content-length']);
 
-                try {
-                    Request(url).pipe(Fs.createWriteStream(filename));
-                } catch(e) {
-                    console.log('create write stream failed', e);
+                if ((! Fs.exists(filename)) || options.reDownload) {
+
+                    try {
+                        Request(url).pipe(Fs.createWriteStream(filename));
+                    } catch(e) {
+                        console.log('create write stream failed', e);
+                    }
+                } else {
+                    console.log('files already exist');
                 }
 
                 deferred.resolve(filename);
