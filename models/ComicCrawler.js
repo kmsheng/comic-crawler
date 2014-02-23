@@ -8,6 +8,7 @@ var BufferHelper = require('bufferhelper'),
     Url = require('url'),
     Q = require('q');
 
+
 var ComicCrawler = (function() {
 
     function ComicCrawler() {
@@ -123,7 +124,13 @@ var ComicCrawler = (function() {
         return deferred.promise;
     };
 
-    ComicCrawler.prototype.download = function(url, filename) {
+    ComicCrawler.prototype.download = function(url, filename, options) {
+
+        options = Extend({
+            reDownload: false
+        }, options);
+
+
 
         var deferred = Q.defer();
 
