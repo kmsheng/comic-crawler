@@ -1,6 +1,7 @@
 
 var BufferHelper = require('bufferhelper'),
     Cheerio = require('cheerio'),
+    Extend = require('extend'),
     Fs = require('fs'),
     Http = require('http'),
     Iconv = require('iconv-lite'),
