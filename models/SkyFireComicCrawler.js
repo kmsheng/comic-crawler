@@ -3,7 +3,9 @@ var Cheerio = require('cheerio'),
     ComicCrawler = require('./ComicCrawler');
     Url = require('url');
     Util = require('util'),
+    Process = require('process'),
     Q = require('q');
+
 
 var SkyFireComicCrawler = (function(ComicCrawler) {
 
@@ -19,12 +21,17 @@ var SkyFireComicCrawler = (function(ComicCrawler) {
         var urlParts = Url.parse(comicLink);
         var deferred = Q.defer();
 
-        ComicCrawler.prototype.getChapterLinksByComicLink(comicLink, urlParts.path)
+        ComicCrawler.prototype.getChapterLinksByComicLink.call(this, comicLink, urlParts.path)
             .then(function(links) {
                 var newLinks = [];
 
                 links.forEach(function(link) {
-                    newLinks.push(self.getProtocol() + '//' + self.getHost() + link);
+
+                    var parts = Url.parse(link);
+
+                    if ((! parts.hasOwnProperty('protocol')) && (! parts.hasOwnProperty('host'))) {
+                        newLinks.push(self.getProtocol() + '//' + self.getHost() + link);
+                    }
                 });
 
                 deferred.resolve(newLinks);
@@ -72,14 +79,16 @@ var SkyFireComicCrawler = (function(ComicCrawler) {
 
                         ComicCrawler.prototype.getHtmlByUrl(url)
                             .then(function(html) {
-                                var matches = html.match(/"([\w\/]+)\.(png|jpg)"/g);
+
+                                var matches = html.match(/"([\w\/]+)\.(png|jpg)"/gi);
                                 var trimmedUrls = [];
 
                                 matches.forEach(function(url) {
                                     trimmedUrls.push(url.substring(1, url.length - 1));
                                 })
                                 deferred.resolve(trimmedUrls);
-                            }, function() {
+                            }, function(reason) {
+                                console.log('ComicCrawler.prototype.getHtmlByUrl failed');
                                 deferred.reject('ComicCrawler.prototype.getHtmlByUrl failed');
                             });
 
