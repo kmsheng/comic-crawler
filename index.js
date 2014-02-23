@@ -2,12 +2,17 @@ var Mkdirp = require('mkdirp'),
     Url = require('Url'),
     Util = require('util'),
     Path = require('path'),
+    Moment = require('moment'),
     Process = require('process'),
     Q = require('q');
+
+var start = Moment().format('YYYY MMM Do h:mm:ss a');
 
 var CrawlerFactory = require('./factories/CrawlerFactory');
 
 var crawler = new CrawlerFactory().create('http://comic.sfacg.com/');
+
+var BAR_CHAR = 'win32' === process.platform ? '■' : '▇';
 
 var args = Process.argv;
 
@@ -18,6 +23,7 @@ crawler.getChapterLinksByComicLink(comicLink)
 
         var clonedChapterLinks = chapterLinks.slice();
         var chapterImageUrls = [];
+
         crawler.getImageUrlsOneByOne(clonedChapterLinks, chapterImageUrls)
             .then(function(imageUrlsSets) {
 
@@ -48,6 +54,8 @@ crawler.getChapterLinksByComicLink(comicLink)
 
                 var clonedDownloadInfos = downloadInfos.slice();
 
+                var total = downloadInfos.length;
+
                 var downloadOneByOne = function(downloadInfos) {
 
                     var deferred = Q.defer();
@@ -56,16 +64,21 @@ crawler.getChapterLinksByComicLink(comicLink)
                         var info = downloadInfos.pop();
 
                         if ('undefined' === typeof info) {
-                            console.log('done');
                             deferred.resolve('done');
-                            console.log('complete downloading');
+                            console.log('download complete');
                             return false;
                         }
-                        console.log(info.downloadUrl, info.fullPath);
 
                         crawler.download(info.downloadUrl, info.fullPath)
                             .then(function(ret) {
-                                console.log('done');
+                                var downloaded = total - downloadInfos.length,
+                                    percent = parseInt(downloaded / total * 100, 10);
+                                    barLength = parseInt(percent / 5, 10);
+
+                                var bar = new Array(barLength).join(BAR_CHAR);
+                                console.log('start time: ' + start + ' - ' + Moment().from(start));
+                                console.log(bar + ' ' + percent + '% (' + downloaded + ' / ' + total + ')');
+
                             }, function(reason) {
                                 console.log('fail');
                             })
